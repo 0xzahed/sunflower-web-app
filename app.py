@@ -1,10 +1,8 @@
 import streamlit as st
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 import numpy as np
 from PIL import Image
 import os
+import onnxruntime as ort
 
 # Page configuration
 st.set_page_config(
@@ -524,65 +522,37 @@ DISEASE_INFO = {
 
 @st.cache_resource
 def load_trained_model():
-    """Load the trained MobileNetV2 model"""
+    """Load the ONNX model for inference"""
     try:
-        # Local model path (primary)
-        LOCAL_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'MobilenetV2_corn_disease_full_training.h5')
+        LOCAL_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sunflower_model.onnx')
 
-        # Google Drive backup (if local file not found)
-        GOOGLE_DRIVE_FILE_ID = "1N4BXw33VbFYl18sXus314sjr6j2uvUrT"
-        DOWNLOAD_MODEL_NAME = 'model.h5'
-        
-        # First, try to load from local path
         if os.path.exists(LOCAL_MODEL_PATH):
-            st.info("🔄 Loading model from local path...")
-            model = load_model(LOCAL_MODEL_PATH)
-            st.success("✅ Model loaded successfully from local storage!")
-            return model, LOCAL_MODEL_PATH
-        
-        # If local model not found, try to download from Google Drive
-        st.warning("⚠️ Local model not found. Attempting to download from Google Drive...")
-        
-        if not os.path.exists(DOWNLOAD_MODEL_NAME):
-            try:
-                import gdown
-                st.info("📥 Downloading model from Google Drive... (This may take a minute)")
-                url = f"https://drive.google.com/uc?id={GOOGLE_DRIVE_FILE_ID}"
-                gdown.download(url, DOWNLOAD_MODEL_NAME, quiet=False)
-                st.success("✅ Model downloaded successfully!")
-            except Exception as download_error:
-                st.error(f"❌ Failed to download model: {str(download_error)}")
-                st.error("Please check your internet connection and Google Drive file permissions.")
-                return None, None
-        
-        # Load the downloaded model
-        st.info("🔄 Loading downloaded model...")
-        model = load_model(DOWNLOAD_MODEL_NAME)
-        st.success("✅ Model loaded successfully!")
-        return model, DOWNLOAD_MODEL_NAME
-        
+            st.info("🔄 Loading model...")
+            sess = ort.InferenceSession(LOCAL_MODEL_PATH)
+            st.success("✅ Model loaded successfully!")
+            return sess, LOCAL_MODEL_PATH
+
+        st.error("❌ Model file not found: sunflower_model.onnx")
+        return None, None
+
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
         return None, None
 
+def preprocess_input(x):
+    """MobileNetV2 preprocessing: scale [-1, 1]"""
+    return (x / 127.5) - 1.0
+
 def preprocess_image(image, target_size=(224, 224)):
     """Preprocess image for MobileNetV2 model"""
-    # Convert to RGB if needed
     if image.mode != 'RGB':
         image = image.convert('RGB')
-    
-    # Resize image
+
     image = image.resize(target_size)
-    
-    # Convert to numpy array
-    img_array = np.array(image)
-    
-    # Expand dimensions
+    img_array = np.array(image).astype(np.float32)
     img_array = np.expand_dims(img_array, axis=0)
-    
-    # Preprocess using MobileNetV2 preprocessing
     img_array = preprocess_input(img_array)
-    
+
     return img_array
 
 def is_sunflower_leaf_image(image):
@@ -680,31 +650,30 @@ def predict_disease(model, image):
     """Predict disease from image with confidence filtering"""
     # Preprocess image
     processed_img = preprocess_image(image)
-    
-    # Make prediction
-    predictions = model.predict(processed_img, verbose=0)
-    
+
+    # Make prediction using ONNX Runtime
+    input_name = model.get_inputs()[0].name
+    predictions = model.run(None, {input_name: processed_img})[0]
+
     # Get class names (must match training order)
     class_names = ['Alternaria Leaf Spot', 'Downy Mildew', 'Healthy', 'Powdery Mildew', 'Wilted Leaves']
-    
-    # Convert to numpy and then to Python float to avoid float32 issues
+
+    # Convert to numpy
     predictions_np = np.array(predictions[0])
-    
+
     # Get predicted class and confidence
     predicted_class_idx = np.argmax(predictions_np)
     predicted_class = class_names[predicted_class_idx]
     confidence = float(predictions_np[predicted_class_idx] * 100)
-    
-    # Check if all predictions are too close (model is uncertain)
+
+    # Check confidence gap
     max_confidence = np.max(predictions_np)
     second_max_confidence = np.partition(predictions_np, -2)[-2]
-    
-    # If difference between top 2 predictions is too small, model is uncertain
     confidence_gap = (max_confidence - second_max_confidence) * 100
-    
-    # Get all predictions for display - convert to Python float
+
+    # Get all predictions for display
     all_predictions = {class_names[i]: float(predictions_np[i] * 100) for i in range(len(class_names))}
-    
+
     return predicted_class, confidence, all_predictions, confidence_gap
 
 def main():
