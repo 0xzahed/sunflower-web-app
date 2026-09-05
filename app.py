@@ -668,7 +668,8 @@ def predict_disease(model, image):
     # Get predicted class and confidence
     predicted_class_idx = np.argmax(predictions_np)
     predicted_class = class_names[predicted_class_idx]
-    confidence = float(predictions_np[predicted_class_idx] * 100)
+    # Cap confidence at 99.9% — 100% is unrealistic in practice
+    confidence = min(float(predictions_np[predicted_class_idx] * 100), 99.9)
 
     # Check confidence gap
     max_confidence = np.max(predictions_np)
