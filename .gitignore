@@ -10,8 +10,7 @@ __pycache__/
 *.pyd
 .Python
 
-# Model files (too large for GitHub)
-*.h5
+# Model files
 model.h5
 
 # Environment
