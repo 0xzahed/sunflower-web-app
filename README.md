@@ -1,18 +1,30 @@
-# 🌽 Corn Disease Detection Web Application
+---
+title: Sunflower Disease Detection
+emoji: 🌻
+colorFrom: green
+colorTo: yellow
+sdk: streamlit
+sdk_version: "1.28.0"
+app_file: app.py
+pinned: false
+---
 
-AI-powered web application for detecting diseases in corn leaves using InceptionV3 deep learning model.
+# 🌻 Sunflower Disease Detection Web Application
+
+AI-powered web application for detecting diseases in sunflower leaves using deep learning (MobileNetV2).
 
 ## 🚀 Features
 
-- **Real-time Disease Detection**: Upload corn leaf images and get instant predictions
-- **5 Disease Classes**: 
-  - Common Rust
-  - Corn Leaf Blight
-  - Gray Leaf Spot
+- **Real-time Disease Detection**: Upload sunflower leaf images and get instant predictions
+- **5 Disease Classes**:
+  - Alternaria Leaf Spot
+  - Downy Mildew
   - Healthy
-  - Maize Chlorotic Mottle Virus
-- **Beautiful UI**: Modern, responsive design with gradient effects
-- **Detailed Results**: 
+  - Powdery Mildew
+  - Wilted Leaves
+- **Smart Image Validation**: Automatically rejects non-leaf images (sky, walls, skin, etc.)
+- **Modern UI**: Glassmorphism design with animated gradients
+- **Detailed Results**:
   - Prediction confidence scores
   - Disease information and symptoms
   - Treatment recommendations
@@ -21,29 +33,29 @@ AI-powered web application for detecting diseases in corn leaves using Inception
 ## 📋 Requirements
 
 - Python 3.8 or higher
-- TensorFlow 2.15.0
-- Streamlit 1.28.0
+- TensorFlow
+- Streamlit
 - Other dependencies (see requirements.txt)
 
 ## 🔧 Installation
 
-1. **Clone or navigate to the project directory**
+1. **Clone the repository**
 ```bash
-cd /media/panda/Data1/leaf_ditection
+git clone https://github.com/0xzahed/sunflower-web-app.git
+cd sunflower-web-app
 ```
 
-2. **Install required packages**
+2. **Create virtual environment and install packages**
 ```bash
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ## 🎯 Usage
 
-1. **Make sure your trained model (.h5 file) is in the same directory**
-   - The app will automatically look for:
-     - `best_inceptionv3_corn_full_training.h5`
-     - `inceptionv3_corn_disease_full_training.h5`
-     - `lightning_studio_inceptionv3_corn_disease_full_training.h5`
+1. **Make sure the trained model (.h5 file) is in the same directory**
+   - The app uses: `MobilenetV2_corn_disease_full_training.h5`
 
 2. **Run the Streamlit app**
 ```bash
@@ -55,20 +67,20 @@ streamlit run app.py
    - If not, manually open the URL shown in the terminal
 
 4. **Upload and analyze**
-   - Click "Browse files" or drag & drop a corn leaf image
+   - Click "Browse files" or drag & drop a sunflower leaf image
    - Click "Analyze Image" button
    - View the prediction results and disease information
 
 ## 📁 Project Structure
 
 ```
-leaf_ditection/
-│
-├── app.py                          # Main Streamlit application
-├── requirements.txt                # Python dependencies
-├── README.md                       # This file
-├── InceptionV3_Corn.ipynb         # Model training notebook
-└── *.h5                           # Trained model files
+sunflower-web-app/
+├── app.py                                    # Main Streamlit application
+├── requirements.txt                          # Python dependencies
+├── README.md                                 # This file
+├── MobilenetV2_corn_disease_full_training.h5 # Trained model
+├── run_app.sh                                # Setup & run script
+└── deploy.sh                                 # Deployment script
 ```
 
 ## 🎨 Features Explained
@@ -79,20 +91,25 @@ leaf_ditection/
 - Shows image dimensions and format
 
 ### Disease Detection
-- Uses InceptionV3 model trained on corn disease dataset
+- Uses MobileNetV2 transfer learning model
 - Provides confidence score for prediction
 - Shows probability distribution for all classes
 
+### Image Validation
+- Multi-feature validation (color, texture, plant-like pixels)
+- Rejects non-leaf images (sky, walls, paper, skin, soil, flat colors)
+- Provides detailed validation metrics
+
 ### Disease Information
-- Detailed description of each disease
+- Detailed description of each disease (English + Bangla)
 - Common symptoms to look for
 - Recommended treatment methods
 
 ## 🛠️ Troubleshooting
 
 ### Model not loading
-- Ensure your .h5 model file is in the same directory as app.py
-- Check that the model file name matches one of the expected names
+- Ensure the .h5 model file is in the same directory as app.py
+- Check that the model file name matches the expected name
 
 ### Dependencies error
 ```bash
@@ -104,13 +121,6 @@ pip install -r requirements.txt
 ```bash
 streamlit run app.py --server.port 8502
 ```
-
-## 📊 Model Information
-
-- **Architecture**: InceptionV3 (Transfer Learning)
-- **Input Size**: 299 x 299 pixels
-- **Training Dataset**: Augmented corn leaf disease dataset
-- **Classes**: 5 disease categories
 
 ## 🤝 Support
 
@@ -125,5 +135,4 @@ This project is for educational and research purposes.
 
 ---
 
-**Built with ❤️ using Streamlit and TensorFlow**
-# leaf-detection
+**Built with Streamlit and TensorFlow**
