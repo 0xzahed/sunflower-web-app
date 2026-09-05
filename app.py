@@ -381,15 +381,6 @@ st.markdown("""
         font-size: 0.8rem;
         opacity: 0.7;
     }
-    .footer-note {
-        font-size: 0.78rem;
-        margin-top: 0.8rem;
-        padding: 0.6rem 1rem;
-        border-radius: 10px;
-        background: rgba(239,83,80,0.08);
-        border: 1px solid rgba(239,83,80,0.15);
-        display: inline-block;
-    }
 
     /* ===== STEP INDICATOR ===== */
     .step-indicator {
@@ -441,14 +432,27 @@ st.markdown("""
     }
 
     /* ===== TEXT COLORS ===== */
-    .stMarkdown, .stText, p, span, li {
-        color: var(--text-main) !important;
+    .stMarkdown, .stText, p, span, li, label {
+        color: #E8F5E9 !important;
     }
     h1, h2, h3, h4, h5, h6 {
-        color: var(--text-main) !important;
+        color: #E8F5E9 !important;
     }
     .stMarkdown strong, b {
-        color: var(--accent-light) !important;
+        color: #FFD54F !important;
+    }
+    /* Streamlit native widgets text */
+    .stFileUploader p, .stFileUploader span {
+        color: #A5D6A7 !important;
+    }
+    /* Caption / small text */
+    .stCaption, [data-testid="stCaptionContainer"] {
+        color: #A5D6A7 !important;
+    }
+    /* Code blocks */
+    code {
+        color: #FFD54F !important;
+        background: rgba(255,255,255,0.08) !important;
     }
 
     /* ===== ALERTS ===== */
@@ -952,10 +956,7 @@ def main():
     st.markdown("""
     <div class="footer">
         <div class="footer-brand">🌻 Sunflower Disease Detection System</div>
-        <div class="footer-copy">Built with Streamlit & TensorFlow · © 2026</div>
-        <div class="footer-note">
-            ⚠️ <b>Important Note:</b> এটি একটি AI-based diagnostic tool। গুরুত্বপূর্ণ সিদ্ধান্তের জন্য কৃষি বিশেষজ্ঞ বা উদ্ভিদ রোগবিদের সাথে পরামর্শ করুন।
-        </div>
+        <div class="footer-copy">Built with Streamlit & ONNX Runtime · © 2026</div>
     </div>
     """, unsafe_allow_html=True)
 
