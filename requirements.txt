@@ -1,4 +1,4 @@
-streamlit==1.38.0
-onnxruntime==1.19.2
+streamlit
+onnxruntime
 numpy<2.0
 Pillow
