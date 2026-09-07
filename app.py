@@ -482,6 +482,55 @@ st.markdown("""
         .result-box { padding: 1.2rem; }
         .metrics-grid { grid-template-columns: 1fr; }
     }
+
+    /* ===== HIDE STREAMLIT DEFAULT UI (GitHub logo, profile avatar, menu, footer) ===== */
+    /* Hide the top-right hamburger/main menu (contains GitHub link & source) */
+    header[data-testid="stHeader"] [data-testid="stMainMenu"],
+    header[data-testid="stHeader"] [data-testid="stMainMenuButton"],
+    #MainMenu,
+    .main-menu {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Hide the top-right toolbar (share, GitHub icon, profile avatar) */
+    header[data-testid="stHeader"] [data-testid="stToolbar"],
+    header[data-testid="stHeader"] [data-testid="stHeaderActionElements"],
+    header[data-testid="stHeader"] [data-testid="stLogo"],
+    header[data-testid="stHeader"] [data-testid="stAppViewBlockContainer"] + div,
+    .stApp > header a[href*="github"],
+    .stApp > header img[alt*="GitHub" i],
+    .stApp > header img[alt*="profile" i] {
+        display: none !important;
+    }
+
+    /* Hide any GitHub icon/link anywhere in the header */
+    header[data-testid="stHeader"] a[href*="github.com"],
+    header[data-testid="stHeader"] svg[aria-label*="GitHub" i],
+    header[data-testid="stHeader"] [data-testid="stGitHubIcon"] {
+        display: none !important;
+    }
+
+    /* Hide the "Made with Streamlit" footer + social/share links */
+    footer[data-testid="stFooter"],
+    footer[data-testid="stFooterViewContainer"],
+    #stFooter,
+    .stFooter,
+    .stApp > footer {
+        display: none !important;
+    }
+
+    /* Hide the deploy/cloud badge if present */
+    [data-testid="stDeployButton"],
+    .stDeployButton,
+    [data-testid="stCloudToolbar"] {
+        display: none !important;
+    }
+
+    /* Remove extra top padding left behind after hiding header elements */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
