@@ -601,25 +601,34 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# JavaScript to reliably hide the "Created by <user>" element on Streamlit Cloud
-# CSS can't select by text content, so we use JS to find and hide it
+# JavaScript to reliably hide the "Created by" and "Hosted by" widgets on Streamlit Cloud
+# CSS can't select by text content, so we use JS to find and hide them
 st.markdown("""
 <script>
     function hideCreatedBy() {
-        // Find any element whose text contains "created by" and hide it + its parent
-        document.querySelectorAll('a, span, div, p, button').forEach(function(el) {
+        var keywords = ['created by', 'hosted by', 'made with streamlit', '★', 'deploy'];
+        // Find any element whose text contains keywords and hide it + parents
+        document.querySelectorAll('a, span, div, p, button, section, aside').forEach(function(el) {
             var txt = (el.textContent || '').trim().toLowerCase();
-            // Only match leaf-ish nodes (few children) to avoid hiding the whole page
-            if (txt.indexOf('created by') !== -1 && el.children.length <= 3 && txt.length < 80) {
-                el.style.display = 'none';
-                // Also hide parent containers that wrap the whole widget
-                var p = el.parentElement;
-                if (p && p.children.length <= 3) p.style.display = 'none';
-                var pp = p ? p.parentElement : null;
-                if (pp && pp.children.length <= 3) pp.style.display = 'none';
+            if (txt.length === 0 || txt.length > 120) return;
+            for (var i = 0; i < keywords.length; i++) {
+                if (txt.indexOf(keywords[i]) !== -1) {
+                    // Check if this is a leaf-ish node (not the whole page)
+                    if (el.children.length <= 5) {
+                        el.style.display = 'none';
+                        // Hide parent containers too
+                        var p = el.parentElement;
+                        if (p && p.children.length <= 5) p.style.display = 'none';
+                        var pp = p ? p.parentElement : null;
+                        if (pp && pp.children.length <= 5) pp.style.display = 'none';
+                        var ppp = pp ? pp.parentElement : null;
+                        if (ppp && ppp.children.length <= 5) ppp.style.display = 'none';
+                    }
+                    break;
+                }
             }
         });
-        // Hide the floating user menu / app menu button (bottom-right)
+        // Hide known Streamlit Cloud widget test-ids
         document.querySelectorAll(
             '[data-testid="stAppMenu"], [data-testid="stAppMenuButton"], ' +
             '[data-testid="stFloatingWidget"], [data-testid="stFloatingMenu"], ' +
@@ -627,22 +636,42 @@ st.markdown("""
             '[data-testid="stCreatorBadge"], [data-testid="stCreatorLink"], ' +
             '[data-testid="stCreatedBy"], [data-testid="stCreatedByText"], ' +
             '[data-testid="stAppCreator"], [data-testid="stAppAuthor"], ' +
-            '[data-testid="stHeaderActionElements"], [data-testid="stHeaderActions"]'
+            '[data-testid="stHeaderActionElements"], [data-testid="stHeaderActions"], ' +
+            '[data-testid="stStatusWidget"], [data-testid="stDeployButton"], ' +
+            '[data-testid="stCloudToolbar"], [data-testid="stCloudMenuItem"]'
         ).forEach(function(el) { el.style.display = 'none'; });
-        // Hide any link pointing to a streamlit user profile
-        document.querySelectorAll('a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"], a[href*="share.streamlit.io"]').forEach(function(el) {
+        // Hide any link pointing to streamlit user profiles or share.streamlit.io
+        document.querySelectorAll(
+            'a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"], ' +
+            'a[href*="share.streamlit.io"], a[href*="streamlit.io/cloud"], ' +
+            'a[href*="streamlit.io/#"], a[href*="github.com/0xzahed"]'
+        ).forEach(function(el) {
             el.style.display = 'none';
+            if (el.parentElement && el.parentElement.children.length <= 3) {
+                el.parentElement.style.display = 'none';
+            }
         });
-        // Hide the bottom-right floating menu button (three-dot menu on Cloud)
-        document.querySelectorAll('[aria-label*="menu" i], [aria-label*="Menu" i]').forEach(function(el) {
+        // Hide elements in the bottom-right corner that look like floating widgets
+        document.querySelectorAll('div, a, button, span, section, aside').forEach(function(el) {
             var r = el.getBoundingClientRect();
-            // Only hide if it's in the bottom-right corner area (floating menu)
-            if (r.top > window.innerHeight * 0.6 && r.left > window.innerWidth * 0.6 && r.width < 60) {
-                el.style.display = 'none';
+            // Bottom-right area: below 70% height, right of 60% width
+            if (r.top > window.innerHeight * 0.65 && r.left > window.innerWidth * 0.55) {
+                var txt = (el.textContent || '').trim().toLowerCase();
+                if (txt.length > 0 && txt.length < 100 && el.children.length <= 5) {
+                    for (var i = 0; i < keywords.length; i++) {
+                        if (txt.indexOf(keywords[i]) !== -1) {
+                            el.style.display = 'none';
+                            if (el.parentElement && el.parentElement.children.length <= 3) {
+                                el.parentElement.style.display = 'none';
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         });
     }
-    // Run immediately and repeatedly until the element is removed
+    // Run immediately and repeatedly
     hideCreatedBy();
     var observer = new MutationObserver(function() { hideCreatedBy(); });
     if (document.body) {
@@ -653,12 +682,12 @@ st.markdown("""
             observer.observe(document.body, { childList: true, subtree: true });
         });
     }
-    // Also re-run periodically for the first 10 seconds (Streamlit renders async)
+    // Re-run periodically for 15 seconds (Streamlit renders async)
     var attempts = 0;
     var interval = setInterval(function() {
         hideCreatedBy();
         attempts++;
-        if (attempts > 40) clearInterval(interval);
+        if (attempts > 60) clearInterval(interval);
     }, 250);
 </script>
 """, unsafe_allow_html=True)
