@@ -529,6 +529,27 @@ st.markdown("""
         display: none !important;
     }
 
+    /* Hide the "Created by <user>" link + user avatar menu on Streamlit Cloud */
+    header[data-testid="stHeader"] [data-testid="stUserMenu"],
+    header[data-testid="stHeader"] [data-testid="stUserAvatar"],
+    header[data-testid="stHeader"] [data-testid="stUserContent"],
+    header[data-testid="stHeader"] [data-testid="stUserLink"],
+    header[data-testid="stHeader"] [data-testid="stHeaderUser"],
+    header[data-testid="stHeader"] [data-testid="stUserPopover"],
+    header[data-testid="stHeader"] a[href*="streamlit.io"],
+    header[data-testid="stHeader"] a[href*="share.streamlit.io"],
+    header[data-testid="stHeader"] a[href*="/users/"],
+    header[data-testid="stHeader"] [data-testid="stAvatar"] {
+        display: none !important;
+    }
+
+    /* Hide the entire right-side cluster of the header (menu + user + github) */
+    header[data-testid="stHeader"] [data-testid="stHeaderActions"],
+    header[data-testid="stHeader"] [data-testid="stHeaderToolbar"],
+    header[data-testid="stHeader"] [data-testid="stHeaderRight"] {
+        display: none !important;
+    }
+
     /* Hide the "Made with Streamlit" footer + social/share links */
     footer[data-testid="stFooter"],
     footer[data-testid="stFooterViewContainer"],
