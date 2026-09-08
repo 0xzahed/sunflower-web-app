@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import numpy as np
 from PIL import Image
 import os
@@ -578,35 +579,33 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # JavaScript to hide "Created by" and "Hosted with Streamlit" on Streamlit Cloud
-# These are injected by the Cloud platform and can't be targeted by CSS alone
-st.markdown("""
+# st.markdown strips <script> tags, so use components.html which executes JS
+# The component runs in an iframe, so we access the parent document via window.parent
+components.html("""
 <script>
 (function() {
-    // Keywords that identify Streamlit Cloud branding widgets
+    var doc = window.parent.document;
     var BRANDING = ['created by', 'hosted with', 'hosted by', 'made with streamlit'];
 
     function hideBranding() {
         // 1. Hide <a> tags linking to streamlit.io (Hosted with Streamlit)
-        //    Exclude links to our own app domain
-        document.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
+        doc.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
             if (!el.href || el.href.indexOf('streamlit.app') !== -1) return;
             el.style.display = 'none';
         });
 
         // 2. Hide <a> tags linking to the user's GitHub profile (Created by)
-        document.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
+        doc.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
             el.style.display = 'none';
         });
 
-        // 3. Hide elements containing branding text (bottom-right corner)
-        //    Only target small leaf nodes to avoid hiding app content
-        document.querySelectorAll('a, span, div, p').forEach(function(el) {
+        // 3. Hide elements containing branding text
+        doc.querySelectorAll('a, span, div, p').forEach(function(el) {
             var txt = (el.textContent || '').trim().toLowerCase();
             if (!txt || txt.length > 80 || el.children.length > 4) return;
             for (var i = 0; i < BRANDING.length; i++) {
                 if (txt.indexOf(BRANDING[i]) !== -1) {
                     el.style.display = 'none';
-                    // Hide parent wrapper too
                     var p = el.parentElement;
                     if (p && p.children.length <= 3) p.style.display = 'none';
                     break;
@@ -618,33 +617,34 @@ st.markdown("""
         var testIds = [
             'stAppMenu', 'stAppMenuButton', 'stFloatingWidget', 'stFloatingMenu',
             'stCreatorBadge', 'stCreatorLink', 'stCreatedBy', 'stCreatedByText',
-            'stAppCreator', 'stAppAuthor'
+            'stAppCreator', 'stAppAuthor', 'stHeaderActionElements', 'stHeaderActions'
         ];
         testIds.forEach(function(tid) {
-            var els = document.querySelectorAll('[data-testid="' + tid + '"]');
-            els.forEach(function(el) { el.style.display = 'none'; });
+            doc.querySelectorAll('[data-testid="' + tid + '"]').forEach(function(el) {
+                el.style.display = 'none';
+            });
+        });
+
+        // 5. Hide the footer
+        doc.querySelectorAll('footer, [data-testid="stFooter"], [data-testid="stFooterViewContainer"]').forEach(function(el) {
+            el.style.display = 'none';
         });
     }
 
     hideBranding();
     var observer = new MutationObserver(hideBranding);
-    if (document.body) {
-        observer.observe(document.body, { childList: true, subtree: true });
-    } else {
-        document.addEventListener('DOMContentLoaded', function() {
-            hideBranding();
-            observer.observe(document.body, { childList: true, subtree: true });
-        });
+    if (doc.body) {
+        observer.observe(doc.body, { childList: true, subtree: true });
     }
-    // Re-run for 15 seconds to catch async renders
+    // Re-run for 30 seconds to catch async renders
     var n = 0;
     var iv = setInterval(function() {
         hideBranding();
-        if (++n > 60) clearInterval(iv);
+        if (++n > 120) clearInterval(iv);
     }, 250);
 })();
 </script>
-""", unsafe_allow_html=True)
+""", height=0, width=0)
 
 # Disease information dictionary
 DISEASE_INFO = {
