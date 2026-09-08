@@ -563,7 +563,26 @@ st.markdown("""
     [data-testid="stFloatingMenu"],
     [data-testid="stAppMenuButton"],
     [data-testid="stAppMenu"],
-    [data-testid="stHeaderActionElements"] {
+    [data-testid="stHeaderActionElements"],
+    [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* ===== GLOBAL: hide Streamlit branding links ANYWHERE in the document ===== */
+    /* "Hosted with Streamlit" links to streamlit.io */
+    a[href*="streamlit.io"]:not([href*="streamlit.app"]),
+    a[href*="share.streamlit.io"],
+    /* "Created by 0xzahed" links to GitHub profile */
+    a[href*="github.com/0xzahed"],
+    /* Any link containing streamlit cloud branding */
+    a[href*="streamlit.io/cloud"] {
+        display: none !important;
+    }
+
+    /* Hide the status widget container (bottom-right "Created by" on Cloud) */
+    [data-testid="stStatusWidget"],
+    [data-testid="stAppViewContainer"] > div:last-child > div:last-child,
+    section[data-testid="stSidebar"] + div > div:last-child {
         display: none !important;
     }
 
@@ -578,21 +597,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # JavaScript to hide "Created by" and "Hosted with Streamlit" on Streamlit Cloud
-# st.html() (Streamlit >= 1.39) runs JS directly in the main document — no iframe
-st.html("""
-<script>
+# st.markdown strips <script> tags, so use <img onerror> trick to execute JS
+st.markdown("""
+<img src="x" style="display:none" onerror="
 (function() {
     var BRANDING = ['created by', 'hosted with', 'hosted by', 'made with streamlit'];
 
     function hideBranding() {
-        // 1. Hide <a> tags linking to streamlit.io (Hosted with Streamlit)
-        document.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
+        // 1. Hide links to streamlit.io (Hosted with Streamlit)
+        document.querySelectorAll('a[href*=\"streamlit.io\"]').forEach(function(el) {
             if (!el.href || el.href.indexOf('streamlit.app') !== -1) return;
             el.style.display = 'none';
         });
 
-        // 2. Hide <a> tags linking to the user's GitHub profile (Created by)
-        document.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
+        // 2. Hide links to GitHub profile (Created by)
+        document.querySelectorAll('a[href*=\"github.com/0xzahed\"]').forEach(function(el) {
             el.style.display = 'none';
         });
 
@@ -610,20 +629,21 @@ st.html("""
             }
         });
 
-        // 4. Hide known Streamlit Cloud widget containers by data-testid
+        // 4. Hide Streamlit Cloud widget containers
         var testIds = [
             'stAppMenu', 'stAppMenuButton', 'stFloatingWidget', 'stFloatingMenu',
             'stCreatorBadge', 'stCreatorLink', 'stCreatedBy', 'stCreatedByText',
-            'stAppCreator', 'stAppAuthor', 'stHeaderActionElements', 'stHeaderActions'
+            'stAppCreator', 'stAppAuthor', 'stHeaderActionElements', 'stHeaderActions',
+            'stStatusWidget', 'stDeployButton', 'stCloudToolbar'
         ];
         testIds.forEach(function(tid) {
-            document.querySelectorAll('[data-testid="' + tid + '"]').forEach(function(el) {
+            document.querySelectorAll('[data-testid=\"' + tid + '\"]').forEach(function(el) {
                 el.style.display = 'none';
             });
         });
 
-        // 5. Hide the footer
-        document.querySelectorAll('footer, [data-testid="stFooter"], [data-testid="stFooterViewContainer"]').forEach(function(el) {
+        // 5. Hide footer
+        document.querySelectorAll('footer, [data-testid=\"stFooter\"], [data-testid=\"stFooterViewContainer\"]').forEach(function(el) {
             el.style.display = 'none';
         });
     }
@@ -638,15 +658,14 @@ st.html("""
             observer.observe(document.body, { childList: true, subtree: true });
         });
     }
-    // Re-run for 30 seconds to catch async renders
     var n = 0;
     var iv = setInterval(function() {
         hideBranding();
         if (++n > 120) clearInterval(iv);
     }, 250);
 })();
-</script>
-""")
+">
+""", unsafe_allow_html=True)
 
 # Disease information dictionary
 DISEASE_INFO = {
