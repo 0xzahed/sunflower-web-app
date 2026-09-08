@@ -606,14 +606,17 @@ st.markdown("""
 st.markdown("""
 <script>
     function hideCreatedBy() {
-        // Hide any <a> element whose text contains "Created by"
-        document.querySelectorAll('a, span, div, p').forEach(function(el) {
-            var txt = (el.textContent || '').trim();
-            if (txt.toLowerCase().indexOf('created by') === 0 && el.children.length <= 2) {
-                // Walk up to the closest container that wraps the whole widget
-                var parent = el.closest('[data-testid]') || el.parentElement;
-                if (parent) parent.style.display = 'none';
+        // Find any element whose text contains "created by" and hide it + its parent
+        document.querySelectorAll('a, span, div, p, button').forEach(function(el) {
+            var txt = (el.textContent || '').trim().toLowerCase();
+            // Only match leaf-ish nodes (few children) to avoid hiding the whole page
+            if (txt.indexOf('created by') !== -1 && el.children.length <= 3 && txt.length < 80) {
                 el.style.display = 'none';
+                // Also hide parent containers that wrap the whole widget
+                var p = el.parentElement;
+                if (p && p.children.length <= 3) p.style.display = 'none';
+                var pp = p ? p.parentElement : null;
+                if (pp && pp.children.length <= 3) pp.style.display = 'none';
             }
         });
         // Hide the floating user menu / app menu button (bottom-right)
@@ -623,11 +626,20 @@ st.markdown("""
             '[data-testid="stUserMenu"], [data-testid="stUserAvatar"], ' +
             '[data-testid="stCreatorBadge"], [data-testid="stCreatorLink"], ' +
             '[data-testid="stCreatedBy"], [data-testid="stCreatedByText"], ' +
-            '[data-testid="stAppCreator"], [data-testid="stAppAuthor"]'
+            '[data-testid="stAppCreator"], [data-testid="stAppAuthor"], ' +
+            '[data-testid="stHeaderActionElements"], [data-testid="stHeaderActions"]'
         ).forEach(function(el) { el.style.display = 'none'; });
         // Hide any link pointing to a streamlit user profile
-        document.querySelectorAll('a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"]').forEach(function(el) {
+        document.querySelectorAll('a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"], a[href*="share.streamlit.io"]').forEach(function(el) {
             el.style.display = 'none';
+        });
+        // Hide the bottom-right floating menu button (three-dot menu on Cloud)
+        document.querySelectorAll('[aria-label*="menu" i], [aria-label*="Menu" i]').forEach(function(el) {
+            var r = el.getBoundingClientRect();
+            // Only hide if it's in the bottom-right corner area (floating menu)
+            if (r.top > window.innerHeight * 0.6 && r.left > window.innerWidth * 0.6 && r.width < 60) {
+                el.style.display = 'none';
+            }
         });
     }
     // Run immediately and repeatedly until the element is removed
@@ -641,12 +653,12 @@ st.markdown("""
             observer.observe(document.body, { childList: true, subtree: true });
         });
     }
-    // Also re-run periodically for the first few seconds (Streamlit renders async)
+    // Also re-run periodically for the first 10 seconds (Streamlit renders async)
     var attempts = 0;
     var interval = setInterval(function() {
         hideCreatedBy();
         attempts++;
-        if (attempts > 20) clearInterval(interval);
+        if (attempts > 40) clearInterval(interval);
     }, 250);
 </script>
 """, unsafe_allow_html=True)
