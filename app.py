@@ -487,17 +487,25 @@ st.markdown("""
     /* Hide the top-right hamburger/main menu (contains GitHub link & source) */
     header[data-testid="stHeader"] [data-testid="stMainMenu"],
     header[data-testid="stHeader"] [data-testid="stMainMenuButton"],
+    header[data-testid="stHeader"] [data-testid="stMainMenuCollapseButton"],
     #MainMenu,
     .main-menu {
         display: none !important;
         visibility: hidden !important;
     }
 
-    /* Hide the top-right toolbar (share, GitHub icon, profile avatar) */
+    /* Hide the ENTIRE top-right toolbar (share, GitHub icon, profile avatar, cloud menu) */
+    /* This is the most reliable way to remove GitHub logo + profile on Streamlit Cloud */
     header[data-testid="stHeader"] [data-testid="stToolbar"],
     header[data-testid="stHeader"] [data-testid="stHeaderActionElements"],
+    header[data-testid="stHeader"] [data-testid="stHeaderToolbar"],
     header[data-testid="stHeader"] [data-testid="stLogo"],
     header[data-testid="stHeader"] [data-testid="stAppViewBlockContainer"] + div,
+    header[data-testid="stHeader"] [data-testid="stStatusWidget"],
+    header[data-testid="stHeader"] [data-testid="stCloudToolbar"],
+    header[data-testid="stHeader"] [data-testid="stDeployButton"],
+    header[data-testid="stHeader"] [data-testid="stGitHubIcon"],
+    header[data-testid="stHeader"] [data-testid="stAppMenu"],
     .stApp > header a[href*="github"],
     .stApp > header img[alt*="GitHub" i],
     .stApp > header img[alt*="profile" i] {
@@ -507,28 +515,46 @@ st.markdown("""
     /* Hide any GitHub icon/link anywhere in the header */
     header[data-testid="stHeader"] a[href*="github.com"],
     header[data-testid="stHeader"] svg[aria-label*="GitHub" i],
-    header[data-testid="stHeader"] [data-testid="stGitHubIcon"] {
+    header[data-testid="stHeader"] svg[aria-label*="github" i],
+    header[data-testid="stHeader"] a[aria-label*="GitHub" i],
+    header[data-testid="stHeader"] a[aria-label*="github" i],
+    header[data-testid="stHeader"] a[href*="github.com"]:not([href*="github.io"]) {
+        display: none !important;
+    }
+
+    /* Hide the entire header toolbar action container (catch-all for Cloud UI) */
+    header[data-testid="stHeader"] > div > div:last-child,
+    header[data-testid="stHeader"] [data-testid="stHeaderContent"],
+    header[data-testid="stHeader"] [data-testid="stHeaderText"] {
         display: none !important;
     }
 
     /* Hide the "Made with Streamlit" footer + social/share links */
     footer[data-testid="stFooter"],
     footer[data-testid="stFooterViewContainer"],
+    footer[data-testid="stFooter"],
     #stFooter,
     .stFooter,
-    .stApp > footer {
+    .stApp > footer,
+    [data-testid="stFooter"],
+    [data-testid="stFooterViewContainer"] {
         display: none !important;
     }
 
     /* Hide the deploy/cloud badge if present */
     [data-testid="stDeployButton"],
     .stDeployButton,
-    [data-testid="stCloudToolbar"] {
+    [data-testid="stCloudToolbar"],
+    [data-testid="stCloudMenuItem"],
+    .stCloud {
         display: none !important;
     }
 
     /* Remove extra top padding left behind after hiding header elements */
     header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    header[data-testid="stHeader"] > div {
         background: transparent !important;
     }
 </style>
