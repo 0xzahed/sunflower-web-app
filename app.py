@@ -578,7 +578,77 @@ st.markdown("""
     header[data-testid="stHeader"] > div {
         background: transparent !important;
     }
+
+    /* Hide the floating "Created by <user>" widget on Streamlit Cloud */
+    /* It renders as an <a> tag in the bottom-right corner */
+    a[href*="share.streamlit.io"] + *,
+    [data-testid="stAppViewBlockContainer"] a[href*="streamlit.io"],
+    [data-testid="stAppViewBlockContainer"] a[href*="streamlit.app"],
+    [href*="streamlit.io/user"],
+    [href*="streamlit.app/user"],
+    [data-testid="stCreatedByText"],
+    [data-testid="stCreatedBy"],
+    [data-testid="stCreatorBadge"],
+    [data-testid="stCreatorLink"],
+    [data-testid="stAppCreator"],
+    [data-testid="stAppAuthor"],
+    [data-testid="stFloatingWidget"],
+    [data-testid="stFloatingMenu"],
+    [data-testid="stAppMenuButton"],
+    [data-testid="stAppMenu"] {
+        display: none !important;
+    }
 </style>
+""", unsafe_allow_html=True)
+
+# JavaScript to reliably hide the "Created by <user>" element on Streamlit Cloud
+# CSS can't select by text content, so we use JS to find and hide it
+st.markdown("""
+<script>
+    function hideCreatedBy() {
+        // Hide any <a> element whose text contains "Created by"
+        document.querySelectorAll('a, span, div, p').forEach(function(el) {
+            var txt = (el.textContent || '').trim();
+            if (txt.toLowerCase().indexOf('created by') === 0 && el.children.length <= 2) {
+                // Walk up to the closest container that wraps the whole widget
+                var parent = el.closest('[data-testid]') || el.parentElement;
+                if (parent) parent.style.display = 'none';
+                el.style.display = 'none';
+            }
+        });
+        // Hide the floating user menu / app menu button (bottom-right)
+        document.querySelectorAll(
+            '[data-testid="stAppMenu"], [data-testid="stAppMenuButton"], ' +
+            '[data-testid="stFloatingWidget"], [data-testid="stFloatingMenu"], ' +
+            '[data-testid="stUserMenu"], [data-testid="stUserAvatar"], ' +
+            '[data-testid="stCreatorBadge"], [data-testid="stCreatorLink"], ' +
+            '[data-testid="stCreatedBy"], [data-testid="stCreatedByText"], ' +
+            '[data-testid="stAppCreator"], [data-testid="stAppAuthor"]'
+        ).forEach(function(el) { el.style.display = 'none'; });
+        // Hide any link pointing to a streamlit user profile
+        document.querySelectorAll('a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"]').forEach(function(el) {
+            el.style.display = 'none';
+        });
+    }
+    // Run immediately and repeatedly until the element is removed
+    hideCreatedBy();
+    var observer = new MutationObserver(function() { hideCreatedBy(); });
+    if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            hideCreatedBy();
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
+    }
+    // Also re-run periodically for the first few seconds (Streamlit renders async)
+    var attempts = 0;
+    var interval = setInterval(function() {
+        hideCreatedBy();
+        attempts++;
+        if (attempts > 20) clearInterval(interval);
+    }, 250);
+</script>
 """, unsafe_allow_html=True)
 
 # Disease information dictionary
