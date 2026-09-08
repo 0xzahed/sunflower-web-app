@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import numpy as np
 from PIL import Image
 import os
@@ -579,28 +578,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # JavaScript to hide "Created by" and "Hosted with Streamlit" on Streamlit Cloud
-# st.markdown strips <script> tags, so use components.html which executes JS
-# The component runs in an iframe, so we access the parent document via window.parent
-components.html("""
+# st.html() (Streamlit >= 1.39) runs JS directly in the main document — no iframe
+st.html("""
 <script>
 (function() {
-    var doc = window.parent.document;
     var BRANDING = ['created by', 'hosted with', 'hosted by', 'made with streamlit'];
 
     function hideBranding() {
         // 1. Hide <a> tags linking to streamlit.io (Hosted with Streamlit)
-        doc.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
+        document.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
             if (!el.href || el.href.indexOf('streamlit.app') !== -1) return;
             el.style.display = 'none';
         });
 
         // 2. Hide <a> tags linking to the user's GitHub profile (Created by)
-        doc.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
+        document.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
             el.style.display = 'none';
         });
 
         // 3. Hide elements containing branding text
-        doc.querySelectorAll('a, span, div, p').forEach(function(el) {
+        document.querySelectorAll('a, span, div, p').forEach(function(el) {
             var txt = (el.textContent || '').trim().toLowerCase();
             if (!txt || txt.length > 80 || el.children.length > 4) return;
             for (var i = 0; i < BRANDING.length; i++) {
@@ -620,21 +617,26 @@ components.html("""
             'stAppCreator', 'stAppAuthor', 'stHeaderActionElements', 'stHeaderActions'
         ];
         testIds.forEach(function(tid) {
-            doc.querySelectorAll('[data-testid="' + tid + '"]').forEach(function(el) {
+            document.querySelectorAll('[data-testid="' + tid + '"]').forEach(function(el) {
                 el.style.display = 'none';
             });
         });
 
         // 5. Hide the footer
-        doc.querySelectorAll('footer, [data-testid="stFooter"], [data-testid="stFooterViewContainer"]').forEach(function(el) {
+        document.querySelectorAll('footer, [data-testid="stFooter"], [data-testid="stFooterViewContainer"]').forEach(function(el) {
             el.style.display = 'none';
         });
     }
 
     hideBranding();
     var observer = new MutationObserver(hideBranding);
-    if (doc.body) {
-        observer.observe(doc.body, { childList: true, subtree: true });
+    if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+    } else {
+        document.addEventListener('DOMContentLoaded', function() {
+            hideBranding();
+            observer.observe(document.body, { childList: true, subtree: true });
+        });
     }
     // Re-run for 30 seconds to catch async renders
     var n = 0;
@@ -644,7 +646,7 @@ components.html("""
     }, 250);
 })();
 </script>
-""", height=0, width=0)
+""")
 
 # Disease information dictionary
 DISEASE_INFO = {
