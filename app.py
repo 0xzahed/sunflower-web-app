@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import numpy as np
 from PIL import Image
 import os
@@ -597,21 +598,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # JavaScript to hide "Created by" and "Hosted with Streamlit" on Streamlit Cloud
-# st.markdown strips <script> tags, so use <img onerror> trick to execute JS
-st.markdown("""
-<img src="x" style="display:none" onerror="
+# st.html() (Streamlit >= 1.39) executes <script> tags directly in the main document
+st.html("""
+<script>
 (function() {
     var BRANDING = ['created by', 'hosted with', 'hosted by', 'made with streamlit'];
 
     function hideBranding() {
         // 1. Hide links to streamlit.io (Hosted with Streamlit)
-        document.querySelectorAll('a[href*=\"streamlit.io\"]').forEach(function(el) {
+        document.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
             if (!el.href || el.href.indexOf('streamlit.app') !== -1) return;
             el.style.display = 'none';
         });
 
         // 2. Hide links to GitHub profile (Created by)
-        document.querySelectorAll('a[href*=\"github.com/0xzahed\"]').forEach(function(el) {
+        document.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
             el.style.display = 'none';
         });
 
@@ -637,13 +638,13 @@ st.markdown("""
             'stStatusWidget', 'stDeployButton', 'stCloudToolbar'
         ];
         testIds.forEach(function(tid) {
-            document.querySelectorAll('[data-testid=\"' + tid + '\"]').forEach(function(el) {
+            document.querySelectorAll('[data-testid="' + tid + '"]').forEach(function(el) {
                 el.style.display = 'none';
             });
         });
 
         // 5. Hide footer
-        document.querySelectorAll('footer, [data-testid=\"stFooter\"], [data-testid=\"stFooterViewContainer\"]').forEach(function(el) {
+        document.querySelectorAll('footer, [data-testid="stFooter"], [data-testid="stFooterViewContainer"]').forEach(function(el) {
             el.style.display = 'none';
         });
     }
@@ -664,8 +665,46 @@ st.markdown("""
         if (++n > 120) clearInterval(iv);
     }, 250);
 })();
-">
-""", unsafe_allow_html=True)
+</script>
+""")
+
+# Fallback: inject CSS directly into parent document via component iframe
+# This bypasses any CSP restrictions on inline scripts
+components.html("""
+<script>
+(function() {
+    var doc = window.parent.document;
+    var style = doc.createElement('style');
+    style.textContent = `
+        a[href*="streamlit.io"]:not([href*="streamlit.app"]),
+        a[href*="github.com/0xzahed"],
+        [data-testid="stStatusWidget"],
+        [data-testid="stAppMenu"],
+        [data-testid="stAppMenuButton"],
+        [data-testid="stFloatingWidget"],
+        [data-testid="stFloatingMenu"],
+        [data-testid="stCreatorBadge"],
+        [data-testid="stCreatorLink"],
+        [data-testid="stCreatedBy"],
+        [data-testid="stCreatedByText"],
+        [data-testid="stAppCreator"],
+        [data-testid="stAppAuthor"],
+        [data-testid="stHeaderActionElements"],
+        [data-testid="stHeaderActions"],
+        [data-testid="stDeployButton"],
+        [data-testid="stCloudToolbar"],
+        footer[data-testid="stFooter"],
+        [data-testid="stFooterViewContainer"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    `;
+    doc.head.appendChild(style);
+})();
+</script>
+""", height=0, width=0)
 
 # Disease information dictionary
 DISEASE_INFO = {
