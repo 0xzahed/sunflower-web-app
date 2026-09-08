@@ -495,17 +495,20 @@ st.markdown("""
     }
 
     /* Hide the ENTIRE top-right toolbar (share, GitHub icon, profile avatar, cloud menu) */
-    /* This is the most reliable way to remove GitHub logo + profile on Streamlit Cloud */
     header[data-testid="stHeader"] [data-testid="stToolbar"],
     header[data-testid="stHeader"] [data-testid="stHeaderActionElements"],
     header[data-testid="stHeader"] [data-testid="stHeaderToolbar"],
+    header[data-testid="stHeader"] [data-testid="stHeaderActions"],
+    header[data-testid="stHeader"] [data-testid="stHeaderRight"],
     header[data-testid="stHeader"] [data-testid="stLogo"],
-    header[data-testid="stHeader"] [data-testid="stAppViewBlockContainer"] + div,
     header[data-testid="stHeader"] [data-testid="stStatusWidget"],
     header[data-testid="stHeader"] [data-testid="stCloudToolbar"],
     header[data-testid="stHeader"] [data-testid="stDeployButton"],
     header[data-testid="stHeader"] [data-testid="stGitHubIcon"],
     header[data-testid="stHeader"] [data-testid="stAppMenu"],
+    header[data-testid="stHeader"] [data-testid="stUserMenu"],
+    header[data-testid="stHeader"] [data-testid="stUserAvatar"],
+    header[data-testid="stHeader"] [data-testid="stAvatar"],
     .stApp > header a[href*="github"],
     .stApp > header img[alt*="GitHub" i],
     .stApp > header img[alt*="profile" i] {
@@ -517,8 +520,7 @@ st.markdown("""
     header[data-testid="stHeader"] svg[aria-label*="GitHub" i],
     header[data-testid="stHeader"] svg[aria-label*="github" i],
     header[data-testid="stHeader"] a[aria-label*="GitHub" i],
-    header[data-testid="stHeader"] a[aria-label*="github" i],
-    header[data-testid="stHeader"] a[href*="github.com"]:not([href*="github.io"]) {
+    header[data-testid="stHeader"] a[aria-label*="github" i] {
         display: none !important;
     }
 
@@ -529,31 +531,10 @@ st.markdown("""
         display: none !important;
     }
 
-    /* Hide the "Created by <user>" link + user avatar menu on Streamlit Cloud */
-    header[data-testid="stHeader"] [data-testid="stUserMenu"],
-    header[data-testid="stHeader"] [data-testid="stUserAvatar"],
-    header[data-testid="stHeader"] [data-testid="stUserContent"],
-    header[data-testid="stHeader"] [data-testid="stUserLink"],
-    header[data-testid="stHeader"] [data-testid="stHeaderUser"],
-    header[data-testid="stHeader"] [data-testid="stUserPopover"],
-    header[data-testid="stHeader"] a[href*="streamlit.io"],
-    header[data-testid="stHeader"] a[href*="share.streamlit.io"],
-    header[data-testid="stHeader"] a[href*="/users/"],
-    header[data-testid="stHeader"] [data-testid="stAvatar"] {
-        display: none !important;
-    }
-
-    /* Hide the entire right-side cluster of the header (menu + user + github) */
-    header[data-testid="stHeader"] [data-testid="stHeaderActions"],
-    header[data-testid="stHeader"] [data-testid="stHeaderToolbar"],
-    header[data-testid="stHeader"] [data-testid="stHeaderRight"] {
-        display: none !important;
-    }
-
-    /* Hide the "Made with Streamlit" footer + social/share links */
+    /* ===== HIDE STREAMLIT CLOUD FOOTER / BRANDING (bottom-right) ===== */
+    /* "Made with Streamlit" footer */
     footer[data-testid="stFooter"],
     footer[data-testid="stFooterViewContainer"],
-    footer[data-testid="stFooter"],
     #stFooter,
     .stFooter,
     .stApp > footer,
@@ -562,12 +543,27 @@ st.markdown("""
         display: none !important;
     }
 
-    /* Hide the deploy/cloud badge if present */
+    /* Deploy/cloud badge */
     [data-testid="stDeployButton"],
     .stDeployButton,
     [data-testid="stCloudToolbar"],
     [data-testid="stCloudMenuItem"],
     .stCloud {
+        display: none !important;
+    }
+
+    /* "Created by" / "Hosted by" floating widgets (bottom-right corner) */
+    [data-testid="stCreatedByText"],
+    [data-testid="stCreatedBy"],
+    [data-testid="stCreatorBadge"],
+    [data-testid="stCreatorLink"],
+    [data-testid="stAppCreator"],
+    [data-testid="stAppAuthor"],
+    [data-testid="stFloatingWidget"],
+    [data-testid="stFloatingMenu"],
+    [data-testid="stAppMenuButton"],
+    [data-testid="stAppMenu"],
+    [data-testid="stHeaderActionElements"] {
         display: none !important;
     }
 
@@ -578,117 +574,75 @@ st.markdown("""
     header[data-testid="stHeader"] > div {
         background: transparent !important;
     }
-
-    /* Hide the floating "Created by <user>" widget on Streamlit Cloud */
-    /* It renders as an <a> tag in the bottom-right corner */
-    a[href*="share.streamlit.io"] + *,
-    [data-testid="stAppViewBlockContainer"] a[href*="streamlit.io"],
-    [data-testid="stAppViewBlockContainer"] a[href*="streamlit.app"],
-    [href*="streamlit.io/user"],
-    [href*="streamlit.app/user"],
-    [data-testid="stCreatedByText"],
-    [data-testid="stCreatedBy"],
-    [data-testid="stCreatorBadge"],
-    [data-testid="stCreatorLink"],
-    [data-testid="stAppCreator"],
-    [data-testid="stAppAuthor"],
-    [data-testid="stFloatingWidget"],
-    [data-testid="stFloatingMenu"],
-    [data-testid="stAppMenuButton"],
-    [data-testid="stAppMenu"] {
-        display: none !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# JavaScript to reliably hide the "Created by" and "Hosted by" widgets on Streamlit Cloud
-# CSS can't select by text content, so we use JS to find and hide them
+# JavaScript to hide "Created by" and "Hosted with Streamlit" on Streamlit Cloud
+# These are injected by the Cloud platform and can't be targeted by CSS alone
 st.markdown("""
 <script>
-    function hideCreatedBy() {
-        var keywords = ['created by', 'hosted by', 'made with streamlit', '★', 'deploy'];
-        // Find any element whose text contains keywords and hide it + parents
-        document.querySelectorAll('a, span, div, p, button, section, aside').forEach(function(el) {
+(function() {
+    // Keywords that identify Streamlit Cloud branding widgets
+    var BRANDING = ['created by', 'hosted with', 'hosted by', 'made with streamlit'];
+
+    function hideBranding() {
+        // 1. Hide <a> tags linking to streamlit.io (Hosted with Streamlit)
+        //    Exclude links to our own app domain
+        document.querySelectorAll('a[href*="streamlit.io"]').forEach(function(el) {
+            if (!el.href || el.href.indexOf('streamlit.app') !== -1) return;
+            el.style.display = 'none';
+        });
+
+        // 2. Hide <a> tags linking to the user's GitHub profile (Created by)
+        document.querySelectorAll('a[href*="github.com/0xzahed"]').forEach(function(el) {
+            el.style.display = 'none';
+        });
+
+        // 3. Hide elements containing branding text (bottom-right corner)
+        //    Only target small leaf nodes to avoid hiding app content
+        document.querySelectorAll('a, span, div, p').forEach(function(el) {
             var txt = (el.textContent || '').trim().toLowerCase();
-            if (txt.length === 0 || txt.length > 120) return;
-            for (var i = 0; i < keywords.length; i++) {
-                if (txt.indexOf(keywords[i]) !== -1) {
-                    // Check if this is a leaf-ish node (not the whole page)
-                    if (el.children.length <= 5) {
-                        el.style.display = 'none';
-                        // Hide parent containers too
-                        var p = el.parentElement;
-                        if (p && p.children.length <= 5) p.style.display = 'none';
-                        var pp = p ? p.parentElement : null;
-                        if (pp && pp.children.length <= 5) pp.style.display = 'none';
-                        var ppp = pp ? pp.parentElement : null;
-                        if (ppp && ppp.children.length <= 5) ppp.style.display = 'none';
-                    }
+            if (!txt || txt.length > 80 || el.children.length > 4) return;
+            for (var i = 0; i < BRANDING.length; i++) {
+                if (txt.indexOf(BRANDING[i]) !== -1) {
+                    el.style.display = 'none';
+                    // Hide parent wrapper too
+                    var p = el.parentElement;
+                    if (p && p.children.length <= 3) p.style.display = 'none';
                     break;
                 }
             }
         });
-        // Hide known Streamlit Cloud widget test-ids
-        document.querySelectorAll(
-            '[data-testid="stAppMenu"], [data-testid="stAppMenuButton"], ' +
-            '[data-testid="stFloatingWidget"], [data-testid="stFloatingMenu"], ' +
-            '[data-testid="stUserMenu"], [data-testid="stUserAvatar"], ' +
-            '[data-testid="stCreatorBadge"], [data-testid="stCreatorLink"], ' +
-            '[data-testid="stCreatedBy"], [data-testid="stCreatedByText"], ' +
-            '[data-testid="stAppCreator"], [data-testid="stAppAuthor"], ' +
-            '[data-testid="stHeaderActionElements"], [data-testid="stHeaderActions"], ' +
-            '[data-testid="stStatusWidget"], [data-testid="stDeployButton"], ' +
-            '[data-testid="stCloudToolbar"], [data-testid="stCloudMenuItem"]'
-        ).forEach(function(el) { el.style.display = 'none'; });
-        // Hide any link pointing to streamlit user profiles or share.streamlit.io
-        document.querySelectorAll(
-            'a[href*="/user/"], a[href*="streamlit.io/user"], a[href*="streamlit.app/user"], ' +
-            'a[href*="share.streamlit.io"], a[href*="streamlit.io/cloud"], ' +
-            'a[href*="streamlit.io/#"], a[href*="github.com/0xzahed"]'
-        ).forEach(function(el) {
-            el.style.display = 'none';
-            if (el.parentElement && el.parentElement.children.length <= 3) {
-                el.parentElement.style.display = 'none';
-            }
-        });
-        // Hide elements in the bottom-right corner that look like floating widgets
-        document.querySelectorAll('div, a, button, span, section, aside').forEach(function(el) {
-            var r = el.getBoundingClientRect();
-            // Bottom-right area: below 70% height, right of 60% width
-            if (r.top > window.innerHeight * 0.65 && r.left > window.innerWidth * 0.55) {
-                var txt = (el.textContent || '').trim().toLowerCase();
-                if (txt.length > 0 && txt.length < 100 && el.children.length <= 5) {
-                    for (var i = 0; i < keywords.length; i++) {
-                        if (txt.indexOf(keywords[i]) !== -1) {
-                            el.style.display = 'none';
-                            if (el.parentElement && el.parentElement.children.length <= 3) {
-                                el.parentElement.style.display = 'none';
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+
+        // 4. Hide known Streamlit Cloud widget containers by data-testid
+        var testIds = [
+            'stAppMenu', 'stAppMenuButton', 'stFloatingWidget', 'stFloatingMenu',
+            'stCreatorBadge', 'stCreatorLink', 'stCreatedBy', 'stCreatedByText',
+            'stAppCreator', 'stAppAuthor'
+        ];
+        testIds.forEach(function(tid) {
+            var els = document.querySelectorAll('[data-testid="' + tid + '"]');
+            els.forEach(function(el) { el.style.display = 'none'; });
         });
     }
-    // Run immediately and repeatedly
-    hideCreatedBy();
-    var observer = new MutationObserver(function() { hideCreatedBy(); });
+
+    hideBranding();
+    var observer = new MutationObserver(hideBranding);
     if (document.body) {
         observer.observe(document.body, { childList: true, subtree: true });
     } else {
         document.addEventListener('DOMContentLoaded', function() {
-            hideCreatedBy();
+            hideBranding();
             observer.observe(document.body, { childList: true, subtree: true });
         });
     }
-    // Re-run periodically for 15 seconds (Streamlit renders async)
-    var attempts = 0;
-    var interval = setInterval(function() {
-        hideCreatedBy();
-        attempts++;
-        if (attempts > 60) clearInterval(interval);
+    // Re-run for 15 seconds to catch async renders
+    var n = 0;
+    var iv = setInterval(function() {
+        hideBranding();
+        if (++n > 60) clearInterval(iv);
     }, 250);
+})();
 </script>
 """, unsafe_allow_html=True)
 
